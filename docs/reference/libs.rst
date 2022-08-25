@@ -1,13 +1,13 @@
 Libs
 ====
 
-.. automodule:: sampleproject.libs
+.. automodule:: dvd_renamer.libs
     :members:
     :undoc-members:
 
 Something
 ---------
 
-.. automodule:: sampleproject.libs.samplemodule
+.. automodule:: dvd_renamer.libs.samplemodule
     :members:
     :undoc-members:

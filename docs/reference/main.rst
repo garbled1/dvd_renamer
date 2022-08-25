@@ -1,10 +1,10 @@
-sampleproject
+dvd_renamer
 =============
 
 .. testsetup::
 
-    from sampleproject import *
+    from dvd_renamer import *
 
-.. automodule:: sampleproject
+.. automodule:: dvd_renamer
     :members:
 

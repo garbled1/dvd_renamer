@@ -6,7 +6,7 @@ source =
 [run]
 branch = true
 source =
-    sampleproject
+    dvd_renamer
 parallel = true
 
 [report]

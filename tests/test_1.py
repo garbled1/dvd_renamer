@@ -1,6 +1,6 @@
 """Performs general tests."""
 import amodule
-from sampleproject.libs import samplemodule as SM
+from dvd_renamer.libs import samplemodule as SM
 
 
 def test_amodule():
