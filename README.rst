@@ -39,11 +39,11 @@ Probably?
 How to use this tool
 --------------------
 
-'''python3 ./setup.py install'''
-dvd_rip_rename -i -d /video/arm_media/completed/movies/GoldenEye\ \(1995\)
+    python3 ./setup.py install
+    dvd_rip_rename -i -d /video/arm_media/completed/movies/GoldenEye\ \(1995\)
 
-'''
-.. image::demo.gif
+
+.. image:: https://raw.githubusercontent.com/garbled1/dvd_renamer/main/demo.gif
 
 
 Issues and Discussions
