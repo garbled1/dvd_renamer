@@ -5,25 +5,25 @@ DVD Renamer
     :target: https://github.com/garbled1/dvd_renamer/actions?workflow=ci
     :alt: CI
 
-.. image:: https://codecov.io/gh/garbled1/dvd_renamer/branch/main/graph/badge.svg
-    :target: https://codecov.io/gh/garbled1/dvd_renamer
-    :alt: Codecov
-
-.. image:: https://api.codeclimate.com/v1/badges/d96cc9a1841a819cd4f5/maintainability
-   :target: https://codeclimate.com/github/garbled1/dvd_renamer/maintainability
-   :alt: Maintainability
-
-.. image:: https://img.shields.io/codeclimate/tech-debt/garbled1/dvd_renamer
-    :target: https://codeclimate.com/github/garbled1/dvd_renamer
-    :alt: Code Climate technical debt
-
 .. image:: https://img.shields.io/readthedocs/dvd_renamer/latest?label=Read%20the%20Docs
     :target: https://dvd_renamer.readthedocs.io/en/latest/index.html
     :alt: Read the Docs
 
 Summary
 -------
+After you use the Automatic Ripping Machine to process your favorite blu-ray or
+dvd movie, you now have a bunch of files in Featurettes named title_1234.mkv or
+similar.  This is obnoxious.
 
+http://dvdcompare.net/ is a pretty awesome resource to lookup a dvd, and find all
+the extras.  Often, they list titles for all the little extras, as well as
+time lengths.  In the past, I would manually lookup lengths, and then use that
+to rename the files.  This is also obnoxious.
+
+This program will take a directory of your movie, and try to match the times,
+and rename the files for you.  This is better.
+
+Oh, naming convention is for Plex.  Sorry.
 
 
 Motivation
@@ -33,16 +33,18 @@ Laziness
 
 Acknowledgments
 ---------------
+Probably?
 
 
+How to use this tool
+--------------------
 
-How to use this repository
---------------------------
+'''python3 ./setup.py install'''
+dvd_rip_rename -i -d /video/arm_media/completed/movies/GoldenEye\ \(1995\)
 
-The `documentation`_ pages explain how to use this template for your projects
-and the implementation details adopted here. The documentation pages also serve
-to demonstrate how to compile documentation with Sphinx and deploy it online
-with `ReadTheDocs`_.
+'''
+.. image::demo.gif
+
 
 Issues and Discussions
 ----------------------

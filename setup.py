@@ -79,7 +79,11 @@ setup(
     python_requires='>=3.7, <4',
     install_requires=[
         # https://stackoverflow.com/questions/14399534
-        'matplotlib>=3',
+        'PyInquirer',
+        'rich',
+        'requests',
+        'pymediainfo',
+        'beautifulsoup4',
         ],
     extras_require={
         # eg:
@@ -92,7 +96,7 @@ setup(
         ],
     entry_points={
         'console_scripts': [
-            'samplecli1= dvd_renamer.cli_int1:main',
+            'dvd_rip_rename= dvd_renamer.cli_int1:main',
             ]
         #
         },

@@ -1,1 +1,5 @@
-.
+PyInquirer
+rich
+requests
+pymediainfo
+beautifulsoup4
