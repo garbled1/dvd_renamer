@@ -23,6 +23,10 @@ to rename the files.  This is also obnoxious.
 This program will take a directory of your movie, and try to match the times,
 and rename the files for you.  This is better.
 
+This also mostly works for TV series, with the -s option.  Note that series are
+not always present on dvdcompare, so, YMMV.  It's also a bit more manual, but if
+all the stars align, it gets you 90% of the way there.
+
 Oh, naming convention is for Plex.  Sorry.
 
 
@@ -53,6 +57,10 @@ Issues and Discussions
 As usual for any GitHub-based project, raise an `issue`_ if you find any bug or
 want to suggest an improvement, or open a `discussion`_ if you want to discuss
 or chat :wink:
+
+One known issue, is that if you have a file of say length 9:59, and dvdcompare
+has it listed as (10:00), the tool will not find it, because the fuzzy match just
+looks for 9:.  I have no solution for this currently.
 
 
 Version

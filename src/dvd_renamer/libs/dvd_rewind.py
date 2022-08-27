@@ -67,7 +67,7 @@ class Lookup_Movie:
         raw_text = re.sub(re.compile('</i>'), '', raw_text)
         self.soup_movie = BeautifulSoup(raw_text, 'html.parser')
 
-    def find_time_in_movie(self, time_str):
+    def find_time_in_movie(self, time_str, keep_time):
         res = self.soup_movie.find_all(string=re.compile(time_str))
         # print(res)
         results = []
@@ -77,7 +77,8 @@ class Lookup_Movie:
                 if item != '':
                     item = item.replace('\t', '')
                     # print("ORIG: ", item)
-                    item = re.sub(re.compile('\(.*\)'), '', item)
+                    if not keep_time:
+                        item = re.sub(re.compile('\(.*\)'), '', item)
                     # print("FIRST: ", item)
                     item = re.sub(re.compile('^-* '), '', item)
                     # print("SECOND: ", item)
@@ -90,6 +91,6 @@ class Lookup_Movie:
         fixed_results = list(dict.fromkeys(results))
         return fixed_results
 
-    def find_fuzzy_time_in_movie(self, time_str):
+    def find_fuzzy_time_in_movie(self, time_str, keep_time):
         """ Strip the last second off and guess it."""
-        return self.find_time_in_movie(time_str[:-2])
+        return self.find_time_in_movie(time_str[:-2], keep_time)
