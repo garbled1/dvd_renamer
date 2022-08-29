@@ -151,6 +151,7 @@ def full_process_series(args):
     else:
         series_found = False
     have_special = False
+    used_ep = []
 
     console = Console()
     console.clear()
@@ -164,6 +165,7 @@ def full_process_series(args):
         print("[bold green]DVD Name: ", dvd.guess_name())
         print("[bold green]Year:[/bold green] ", str(dvd.guess_year()))
         print(f"[bold green]Season: {season}")
+        print("[bold green]Episodes assigned: ", used_ep)
         print("")
 
     questions = [
@@ -249,6 +251,7 @@ def full_process_series(args):
         series_url = rewind.get_url_for_movie(ser_answers['series'])
         rewind.process_movie(series_url)
     specials = season * 100
+    cur_ep = 0
 
     for index, episode in enumerate(data):
         header()
@@ -264,6 +267,7 @@ def full_process_series(args):
                 'message': 'Episode number (0 for extra/special)',
                 'validate': NumberValidator,
                 'filter': lambda val: int(val),
+                'default': str(cur_ep + 1),
             },
         ]
         if args.manual:
@@ -307,6 +311,8 @@ def full_process_series(args):
 
             # non special
             else:
+                used_ep.append(answers['ep_number'])
+                cur_ep = answers['ep_number']
                 new_filename = final_dir + '/' + 'Season ' + str(season).zfill(2) + '/' + 'S' + str(season).zfill(2) + 'E' + str(answers['ep_number']).zfill(2) + ' - ' + fixed_ep_title + '.mkv'
             data[index]['new_filename'] = new_filename
 
