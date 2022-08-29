@@ -63,8 +63,8 @@ class Lookup_Movie:
 
     def process_movie(self, url):
         x = requests.get(url)
-        raw_text = re.sub(re.compile('<i>'), '', x.text)
-        raw_text = re.sub(re.compile('</i>'), '', raw_text)
+        raw_text = re.sub(re.compile('<[biu]>'), '', x.text)
+        raw_text = re.sub(re.compile('</[biu]>'), '', raw_text)
         self.soup_movie = BeautifulSoup(raw_text, 'html.parser')
 
     def find_time_in_movie(self, time_str, keep_time):

@@ -224,6 +224,7 @@ def full_process_series(args):
         questions[0]['message'] = 'Series Name'
         questions[1]['message'] = 'Series Year'
         answers = prompt(questions)
+        season = answers['season']
 
     final_dir = args.directory
     if final_dir[-1] == '/':
