@@ -51,7 +51,7 @@ class Gather_DVD:
 
     def get_mkv_data(self):
         """ Return the collected mkv data."""
-        return self.mkv_data
+        return sorted(self.mkv_data, key=lambda d: d['filename'])
 
     def guess_name(self):
         """ Try to guess the name of the movie."""

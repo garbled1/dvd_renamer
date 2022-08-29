@@ -53,22 +53,103 @@ def parse_args():
                         help='Directory to process')
     parser.add_argument('-i', '--ignore_main_feature', action='store_true',
                         dest='imf', default=False,
-                        help='Ignore the main feature')
+                        help='Ignore the main feature in the base directory')
     parser.add_argument('-t', '--title_files_only', action='store_true',
                         dest='title_files', default=False,
                         help='Only process files with title_ in the name')
     parser.add_argument('-s', '--series', action='store_true',
                         dest='series', default=False,
                         help='Process this as a series not a movie')
+    parser.add_argument('-m', '--manual', action='store_true',
+                        dest='manual', default=False,
+                        help='Skip lookup, process manually (series only)')
     args = parser.parse_args()
     return args
+
+
+def mkdir_maybe(dirname):
+    """Confirm then make directory."""
+
+    if not os.path.exists(dirname):
+        print("[red]", dirname)
+        answers = prompt(q_mkdir)
+        if answers['doit']:
+            os.mkdir(dirname)
+
+
+def unhandled_files(data):
+    """Show which files could not be handled."""
+
+    print("The following files could not be processed:")
+    for extra in data:
+        if 'new_filename' not in extra:
+            timestr = str(extra['minutes']) + ':' + str(extra['seconds']).zfill(2)
+            print(extra['filename'] + ' ' + timestr)
+
+def show_files_to_rename(data):
+    """Show which files will be renamed."""
+
+    for episode in data:
+        if 'new_filename' not in episode:
+            continue
+        print('[red]Rename[/red] [green]{}[/green] to [magenta]{}[/magenta]'.format(episode['filename'], episode['new_filename']))
+
+
+def rename_files(data):
+    """Rename all the files."""
+
+    print("[bold red on white]The following will modify your files!")
+    print()
+    answers = prompt(q_rename)
+
+    # rename them
+    if answers['doit']:
+        for episode in data:
+            if 'new_filename' in episode:
+                if os.path.exists(episode['new_filename']):
+                    print("[red]Cowardly refusing to overwrite ",
+                          episode['new_filename'])
+                    continue
+                os.rename(episode['filename'], episode['new_filename'])
+        print("[bold red]Files have been renamed.")
+    else:
+        print("[bold green]Skipped renaming of files.")
+    print()
+
+
+def attempt_item_match(rewind, questions, extra, extra_name, add_time):
+    """Try to match this item to something from the web."""
+
+    timestr = str(extra['minutes']) + ':' + str(extra['seconds']).zfill(2)
+    print("[bold green]File:[/bold green] ", extra['filename'])
+    print("[bold green]Length:[/bold green] ", timestr)
+    choices = rewind.find_time_in_movie(timestr, add_time)
+    choices.append('None of the above')
+    answers = None
+    if len(choices) > 1:
+        questions[0]['choices'] = choices
+        answers = prompt(questions)
+
+    # try again with fuzzy match
+    if answers is None or answers[extra_name] == 'None of the above':
+        print("[bold red] Trying a fuzzy match of time:")
+        choices = rewind.find_fuzzy_time_in_movie(timestr, add_time)
+        choices.append('None of the above')
+        questions[0]['choices'] = choices
+        if len(choices) > 1:
+            answers = prompt(questions)
+
+    return answers
 
 
 def full_process_series(args):
     """Process a series."""
     season = 1
     specials = 100
-    series_found = False
+    if args.manual:
+        series_found = True
+    else:
+        series_found = False
     have_special = False
 
     console = Console()
@@ -136,6 +217,12 @@ def full_process_series(args):
     if not series_found:
         return 1
 
+    # if doing manual mode, we skip the above, and ask slightly differently
+    if args.manual:
+        questions[0]['message'] = 'Series Name'
+        questions[1]['message'] = 'Series Year'
+        answers = prompt(questions)
+
     final_dir = args.directory
     if final_dir[-1] == '/':
         final_dir = final_dir[:-1]
@@ -158,8 +245,9 @@ def full_process_series(args):
     else:
         final_dir = fd_answers['final_dir']
 
-    series_url = rewind.get_url_for_movie(ser_answers['series'])
-    rewind.process_movie(series_url)
+    if not args.manual:
+        series_url = rewind.get_url_for_movie(ser_answers['series'])
+        rewind.process_movie(series_url)
     specials = season * 100
 
     for index, episode in enumerate(data):
@@ -178,26 +266,21 @@ def full_process_series(args):
                 'filter': lambda val: int(val),
             },
         ]
-        timestr = str(episode['minutes']) + ':' + str(episode['seconds']).zfill(2)
-        print("[bold green]File:[/bold green] ", episode['filename'])
-        print("[bold green]Length:[/bold green] ", timestr)
-        choices = rewind.find_time_in_movie(timestr, True)
-        choices.append('None of the above')
-        answers = None
-        if len(choices) > 1:
-            questions[0]['choices'] = choices
+        if args.manual:
+            questions[0] = {
+                'type': 'input',
+                'name': 'ep_title',
+                'message': 'Title for this episode (enter SKIP to skip)',
+            }
+            timestr = str(episode['minutes']) + ':' + str(episode['seconds']).zfill(2)
+            print("[bold green]File:[/bold green] ", episode['filename'])
+            print("[bold green]Length:[/bold green] ", timestr)
             answers = prompt(questions)
-    
-        # try again with fuzzy match
-        if answers is None or answers['ep_title'] == 'None of the above':
-            print("[bold red] Trying a fuzzy match of time:")
-            choices = rewind.find_fuzzy_time_in_movie(timestr, True)
-            choices.append('None of the above')
-            questions[0]['choices'] = choices
-            if len(choices) > 1:
-                answers = prompt(questions)
+        else:
+            answers = attempt_item_match(rewind, questions, episode, 'ep_title', True)
 
-        if answers is not None and answers['ep_title'] != 'None of the above':
+        if (answers is not None and answers['ep_title'] != 'None of the above'
+            and answers['ep_title'] != 'SKIP'):
             fixed_ep_title = re.sub(re.compile('\(.*\)'), '', answers['ep_title'])
             if answers['ep_number'] == 0:
                 have_special = True
@@ -232,55 +315,23 @@ def full_process_series(args):
     header()
 
     # handle making directories
-    if not os.path.exists(final_dir):
-        print("[red]", final_dir)
-        answers = prompt(q_mkdir)
-        if answers['doit']:
-            os.mkdir(final_dir)
-
+    mkdir_maybe(final_dir)
     if have_special:
         spdir_str = final_dir + '/' + 'Season 00'
-        if not os.path.exists(spdir_str):
-            print("[red]", spdir_str)
-            answers = prompt(q_mkdir)
-            if answers['doit']:
-                os.mkdir(spdir_str)
+        mkdir_maybe(spdir_str)
 
     sdir_str = final_dir + '/' + 'Season ' + str(season).zfill(2)
-    if not os.path.exists(sdir_str):
-        print("[red]", sdir_str)
-        answers = prompt(q_mkdir)
-        if answers['doit']:
-            os.mkdir(sdir_str)
+    mkdir_maybe(sdir_str)
 
     # now rename files?
     header()
-    for episode in data:
-        if 'new_filename' not in episode:
-            continue
-        print('[red]Rename[/red] [green]{}[/green] to [magenta]{}[/magenta]'.format(episode['filename'], episode['new_filename']))
-    print("[bold red on white]The following will modify your files!")
-    print()
-    answers = prompt(q_rename)
+    show_files_to_rename(data)
 
     # rename them
-    if answers['doit']:
-        for episode in data:
-            if 'new_filename' in episode:
-                if os.path.exists(episode['new_filename']):
-                    print("[red]Cowardly refusing to overwrite ",
-                          episode['new_filename'])
-                    continue
-                os.rename(episode['filename'], episode['new_filename'])
-    print("[bold red]Files have been renamed.")
-    print()
+    rename_files(data)
 
     # tell about unhandled files
-    print("The following files could not be processed:")
-    for episode in data:
-        if 'new_filename' not in episode:
-            timestr = str(episode['minutes']) + ':' + str(episode['seconds']).zfill(2)
-            print(episode['filename'] + ' ' + timestr)
+    unhandled_files(data)
 
 
 def full_process_movie(args):
@@ -367,24 +418,7 @@ def full_process_movie(args):
                 },
                 extra_type,
             ]
-            timestr = str(extra['minutes']) + ':' + str(extra['seconds']).zfill(2)
-            print("[bold green]File:[/bold green] ", extra['filename'])
-            print("[bold green]Length:[/bold green] ", timestr)
-            choices = rewind.find_time_in_movie(timestr, False)
-            choices.append('None of the above')
-            answers = None
-            if len(choices) > 1:
-                questions[0]['choices'] = choices
-                answers = prompt(questions)
-
-            # try again with fuzzy match
-            if answers is None or answers['extra'] == 'None of the above':
-                print("[bold red] Trying a fuzzy match of time:")
-                choices = rewind.find_fuzzy_time_in_movie(timestr, False)
-                choices.append('None of the above')
-                questions[0]['choices'] = choices
-                if len(choices) > 1:
-                    answers = prompt(questions)
+            answers = attempt_item_match(rewind, questions, extra, 'extra', False)
 
             if answers is not None and answers['extra'] != 'None of the above':
                 new_filename = args.directory + '/' + answers['type'] + '/' + answers['extra'] + '.mkv'
@@ -397,39 +431,19 @@ def full_process_movie(args):
         # handle making directories
         header()
         for extra in data:
-            if 'extra_type' in extra and not os.path.exists(args.directory + '/' + extra['extra_type']):
-                print("[red]", args.directory + '/' + extra['extra_type'])
-                answers = prompt(q_mkdir)
-                if answers['doit']:
-                    os.mkdir(args.directory + '/' + extra['extra_type'])
+            if 'extra_type' in extra:
+                edir = args.directory + '/' + extra['extra_type']
+                mkdir_maybe(edir)
 
         # now rename files?
         header()
-        for extra in data:
-            if 'new_filename' not in extra:
-                continue
-            print('[red]Rename[/red] [green]{}[/green] to [magenta]{}[/magenta]'.format(extra['filename'], extra['new_filename']))
-        print("[bold red on white]The following will modify your files!")
-        print()
-        answers = prompt(q_rename)
+        show_files_to_rename(data)
 
         # rename them
-        if answers['doit']:
-            for extra in data:
-                if 'new_filename' in extra:
-                    if os.path.exists(extra['new_filename']):
-                        print("[red]Cowardly refusing to overwrite ",
-                              extra['new_filename'])
-                        continue
-                    os.rename(extra['filename'], extra['new_filename'])
-        print("[bold red]Files have been renamed.")
+        rename_files(data)
 
         # tell about unhandled files
-        print("The following files could not be processed:")
-        for extra in data:
-            if 'new_filename' not in extra:
-                timestr = str(extra['minutes']) + ':' + str(extra['seconds']).zfill(2)
-                print(extra['filename'] + ' ' + timestr)
+        unhandled_files(data)
 
     # Movie not found.
     else:

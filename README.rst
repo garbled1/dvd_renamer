@@ -27,6 +27,9 @@ This also mostly works for TV series, with the -s option.  Note that series are
 not always present on dvdcompare, so, YMMV.  It's also a bit more manual, but if
 all the stars align, it gets you 90% of the way there.
 
+If you just want to do it all by hand for a series, give it -m, for manual mode.
+No lookup will be performed.
+
 Oh, naming convention is for Plex.  Sorry.
 
 
