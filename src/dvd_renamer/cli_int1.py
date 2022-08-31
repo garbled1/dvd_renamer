@@ -152,6 +152,7 @@ def full_process_series(args):
         series_found = False
     have_special = False
     used_ep = []
+    series_name = ""
 
     console = Console()
     console.clear()
@@ -226,6 +227,7 @@ def full_process_series(args):
         answers = prompt(questions)
         season = answers['season']
 
+    series_name = answers['series']
     final_dir = args.directory
     if final_dir[-1] == '/':
         final_dir = final_dir[:-1]
@@ -302,6 +304,8 @@ def full_process_series(args):
                 sp_answers = prompt(sp_questions)
                 if sp_answers['ep_number'] == (specials + 1):
                     specials = specials + 1
+                elif sp_answers['ep_number'] > specials:
+                    specials = sp_answers['ep_number'] + 1
 
                 ep_str = str(sp_answers['ep_number']).zfill(2)
                 if sp_answers['ep_number'] > 99:
