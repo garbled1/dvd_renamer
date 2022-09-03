@@ -76,6 +76,7 @@ class Lookup_Movie:
             for item in x:
                 if item != '':
                     item = item.replace('\t', '')
+                    item = item.replace('/', '+')
                     # print("ORIG: ", item)
                     if not keep_time:
                         item = re.sub(re.compile('\(.*\)'), '', item)
